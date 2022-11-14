@@ -1,30 +1,25 @@
-import { createEventsDayTemplate } from "./event-day.js";
+import { createElement } from "./../utils.js";
 
-export const createEventsContainerTemplate = (
-  events,
-  dates,
-  transfer,
-  activity,
-  cities,
-  options
-) => {
-  return `<ul class="trip-days">
-  ${Array.from(dates)
-    .map((date, index) => {
-      const dayEvents = events.filter((event) => {
-        const eventDate = `${new Date(event.start)}`.slice(4, 10);
-        return eventDate === date;
-      });
-      return createEventsDayTemplate(
-        index,
-        date,
-        dayEvents,
-        transfer,
-        activity,
-        cities,
-        options
-      );
-    })
-    .join(``)}
-</ul>`;
-};
+export default class EventContainer {
+  constructor() {
+    this._element = null;
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+    return this._element;
+  }
+
+  removeElement() {
+    if (this._element) {
+      this._element = null;
+    }
+  }
+
+  getTemplate() {
+    return `<ul class="trip-days">
+    </ul>`;
+  }
+}

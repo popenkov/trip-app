@@ -7,10 +7,25 @@ export const RenderPosition = {
 
 export const EVENTS_COUNT = 3;
 
+// export const render = (
+//   container,
+//   template,
+//   place = RenderPosition.BEFOREEND
+// ) => {
+//   container.insertAdjacentHTML(place, template);
+// };
+
 export const render = (
   container,
-  template,
-  place = RenderPosition.BEFOREEND
+  element,
+  position = RenderPosition.BEFOREEND
 ) => {
-  container.insertAdjacentHTML(place, template);
+  switch (position) {
+    case RenderPosition.AFTERBEGIN:
+      container.prepend(element);
+      break;
+    case RenderPosition.BEFOREEND:
+      container.append(element);
+      break;
+  }
 };

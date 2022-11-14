@@ -1,85 +1,145 @@
-import { createContentSortTemplate } from "./components/content-sort";
-import { createEventsContainerTemplate } from "./components/event-container";
-import { createFilterTemplate } from "./components/filter";
-import { createAddFormElement } from "./components/form-add";
-import { createSiteMenuTemplate } from "./components/site-menu";
-import { createTripInfoTemplate } from "./components/trip-info";
-import { render, RenderPosition } from "./utils/render";
-import { getEventsData } from "./mock/event";
-import { menuValues } from "./mock/menu";
-import { filtersNames } from "./mock/filter";
+const EVENT_COUNT = 16;
+
+import Menu from "./components/site-menu.js";
+import Filters from "./components/filter.js";
+import TripInfo from "./components/trip-info.js";
+import Sort from "./components/content-sort.js";
+
+import DaysList from "./components/event-container.js";
+import Day from "./components/event-day.js";
+import EventsList from "./components/event-container.js";
+import Event from "./components/event.js";
+import EditEvent from "./components/form-edit.js";
+import AddEvent from "./components/form-add.js";
+
 import {
+  getEventsData,
+  TYPES_OF_TRANSFER,
+  TYPES_OF_ACTIVITY,
   CITIES,
   OPTIONS,
-  TYPES_OF_ACTIVITY,
-  TYPES_OF_TRANSFER,
-} from "./consts";
+} from "./mock/event.js";
+import { menuValues } from "./mock/menu.js";
+import { filtersNames } from "./mock/filter.js";
+import { getUniqDates, getCities } from "./utils.js";
 
-const EVENT_COUNT = 16;
+const tripControls = document.querySelector(`.trip-controls`);
+const tripEvents = document.querySelector(`.trip-events`);
+const tripInfo = document.querySelector(`.trip-main__trip-info`);
+const addButton = document.querySelector(`.trip-main__event-add-btn`);
 const eventsData = getEventsData(EVENT_COUNT);
-const getCities = () => {
-  return eventsData.map((event) => event.city);
+const uniqDates = getUniqDates(eventsData);
+const tripCities = getCities(eventsData);
+
+const renderMenu = () => {
+  const menu = new Menu(menuValues);
+  tripControls.after(menu.getElement());
 };
 
-const getDatesStart = () => {
-  return eventsData.map((event) => new Date(event.start));
+const renderFilters = () => {
+  const filters = new Filters(filtersNames);
+  tripControls.append(filters.getElement());
 };
 
-const getDatesEnd = () => {
-  return eventsData.map((event) => new Date(event.end));
+const renderTripInfo = () => {
+  const info = new TripInfo(tripCities, eventsData);
+  tripInfo.prepend(info.getElement());
 };
 
-const tripDaysDates = new Set(
-  getDatesStart().map((date) => `${date}`.slice(4, 10))
-);
-
-const getPrice = () => {
-  const tripPrices = eventsData
-    .map((event) => event.price)
-    .reduce((a, b) => a + b);
-  const offersPrices = eventsData
-    .map((event) =>
-      Array.from(event.offers).reduce((a, b) => {
-        return a + b.price;
-      }, 0)
-    )
-    .reduce((a, b) => a + b);
-  return tripPrices + offersPrices;
+const renderSort = () => {
+  const sort = new Sort();
+  tripEvents.querySelector(`h2`).after(sort.getElement());
 };
 
-const siteHeaderElement = document.querySelector(".trip-main");
-const siteHeaderControlsElement = siteHeaderElement.querySelector(
-  ".trip-main__trip-controls"
-);
-const siteMainElement = document.querySelector(".page-main");
-const siteMainContentElement = siteMainElement.querySelector(".trip-events");
+const renderEventAdd = () => {
+  const eventAdd = new AddEvent(TYPES_OF_TRANSFER, TYPES_OF_ACTIVITY, CITIES);
+  tripEvents.append(eventAdd.getElement());
+  addButton.disabled = true;
+};
 
-const renderHeader = () => {
-  render(
-    siteHeaderElement,
-    createTripInfoTemplate(getCities(), getDatesStart(), getDatesEnd()),
-    RenderPosition.AFTERBEGIN
+const renderDaysList = () => {
+  const daysList = new DaysList();
+  tripEvents.append(daysList.getElement());
+
+  uniqDates.map((date, index) => {
+    return renderDay(date, index, daysList.getElement());
+  });
+};
+
+const renderDay = (date, index, container) => {
+  const eventsInDayData = getDayEvents(date);
+
+  const day = new Day(eventsInDayData[0].start, index);
+  container.append(day.getElement());
+
+  const eventsList = renderEventsList(day.getElement());
+  eventsInDayData.map((eventData) => {
+    renderEvent(eventData, eventsList.getElement());
+  });
+};
+
+const renderEventsList = (container) => {
+  const eventsList = new EventsList();
+  container.append(eventsList.getElement());
+  return eventsList;
+};
+
+const getDayEvents = (date) => {
+  const dayEvents = eventsData.filter((event) => {
+    return event.date === date;
+  });
+  return dayEvents;
+};
+
+const renderEvent = (eventData, container) => {
+  const event = new Event(eventData);
+  const eventEdit = new EditEvent(
+    eventData,
+    TYPES_OF_TRANSFER,
+    TYPES_OF_ACTIVITY,
+    CITIES,
+    OPTIONS
   );
-  render(siteHeaderControlsElement, createSiteMenuTemplate(menuValues));
-  render(siteHeaderControlsElement, createFilterTemplate(filtersNames));
+  container.append(event.getElement());
+
+  const onEscKeydown = (evt) => {
+    if (evt.key === `Esc` || evt.key === `Escape`) {
+      container.replaceChild(event.getElement(), eventEdit.getElement());
+      document.removeEventListener(`keydown`, onEscKeydown);
+    }
+  };
+
+  event
+    .getElement()
+    .querySelector(`.event__rollup-btn`)
+    .addEventListener(`click`, () => {
+      container.replaceChild(eventEdit.getElement(), event.getElement());
+      document.addEventListener(`keydown`, onEscKeydown);
+    });
+  eventEdit
+    .getElement()
+    .querySelector(`.event__rollup-btn`)
+    .addEventListener(`click`, () => {
+      container.replaceChild(event.getElement(), eventEdit.getElement());
+      document.removeEventListener(`keydown`, onEscKeydown);
+    });
+
+  eventEdit
+    .getElement()
+    .querySelector(`.event--edit`)
+    .addEventListener(`submit`, () => {
+      container.replaceChild(event.getElement(), eventEdit.getElement());
+      document.removeEventListener(`keydown`, onEscKeydown);
+    });
 };
 
-const renderEvents = () => {
-  render(siteMainContentElement, createContentSortTemplate());
-  render(siteMainContentElement, createAddFormElement());
+renderMenu();
+renderFilters();
+renderSort();
 
-  render(
-    siteMainContentElement,
-    createEventsContainerTemplate(
-      eventsData,
-      tripDaysDates,
-      TYPES_OF_TRANSFER,
-      TYPES_OF_ACTIVITY,
-      CITIES,
-      OPTIONS
-    )
-  );
-};
-
-renderHeader();
-renderEvents();
+if (eventsData.length > 0) {
+  renderTripInfo();
+  renderDaysList();
+} else {
+  renderEventAdd();
+}

@@ -1,10 +1,28 @@
-import { TYPES_OF_TRANSFER } from "../consts.js";
-import { TYPES_OF_ACTIVITY } from "../consts.js";
-import { CITIES } from "../consts.js";
+import { createElement } from "./../utils.js";
 
-export const createAddFormElement = () => {
-  return `
-  <form class="trip-events__item  event  event--edit" action="#" method="post">
+export default class FormAdd {
+  constructor(typesOfTransfer, typesOfActivity, cities) {
+    this._typesOfTransfer = typesOfTransfer;
+    this._typesOfActivity = typesOfActivity;
+    this._cities = cities;
+    this._element = null;
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+    return this._element;
+  }
+
+  removeElement() {
+    if (this._element) {
+      this._element = null;
+    }
+  }
+
+  getTemplate() {
+    return `<form class="trip-events__item  event  event--edit" action="#" method="post">
     <header class="event__header">
       <div class="event__type-wrapper">
         <label class="event__type  event__type-btn" for="event-type-toggle-1">
@@ -16,58 +34,63 @@ export const createAddFormElement = () => {
           <fieldset class="event__type-group">
           <fieldset class="event__type-group">
           <legend class="visually-hidden">Transfer</legend>
-          ${TYPES_OF_TRANSFER.map(
-            (eventType) => `<div class="event__type-item">
+          ${this._typesOfTransfer
+            .map(
+              (eventType) => `<div class="event__type-item">
           <input id="event-type-${eventType
             .split(` `)[0]
             .toLowerCase()}-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${eventType
-              .split(` `)[0]
-              .toLowerCase()}">
+                .split(` `)[0]
+                .toLowerCase()}">
           <label class="event__type-label  event__type-label--${eventType
             .split(` `)[0]
             .toLowerCase()}" for="event-type-${eventType
-              .split(` `)[0]
-              .toLowerCase()}-1">${eventType.split(` `)[0]}</label>
+                .split(` `)[0]
+                .toLowerCase()}-1">${eventType.split(` `)[0]}</label>
         </div>`
-          ).join(``)}
+            )
+            .join(``)}
         </fieldset>
         <fieldset class="event__type-group">
           <legend class="visually-hidden">Activity</legend>
-          ${TYPES_OF_ACTIVITY.map(
-            (eventType) => `<div class="event__type-item">
+          ${this._typesOfActivity
+            .map(
+              (eventType) => `<div class="event__type-item">
           <input id="event-type-${eventType
             .split(` `)[0]
             .toLowerCase()}-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${eventType
-              .split(` `)[0]
-              .toLowerCase()}">
+                .split(` `)[0]
+                .toLowerCase()}">
           <label class="event__type-label  event__type-label--${eventType
             .split(` `)[0]
             .toLowerCase()}" for="event-type-${eventType
-              .split(` `)[0]
-              .toLowerCase()}-1">${eventType.split(` `)[0]}</label>
+                .split(` `)[0]
+                .toLowerCase()}-1">${eventType.split(` `)[0]}</label>
         </div>`
-          ).join(``)}
+            )
+            .join(``)}
         </fieldset>
         </div>
       </div>
       <div class="event__field-group  event__field-group--destination">
         <label class="event__label  event__type-output" for="event-destination-1">
+        Sightseeing at
         </label>
         <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="" list="destination-list-1">
         <datalist id="destination-list-1">
-        ${CITIES.map((CITY) => `<option value="${CITY}"></option>`)}
+        ${this._cities.map((city) => `<option value="${city}"></option>`)}
         </datalist>
       </div>
       <div class="event__field-group  event__field-group--time">
         <label class="visually-hidden" for="event-start-time-1">
           From
         </label>
-        <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="">
+        <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="18.09.19 00:00">
         &mdash;
         <label class="visually-hidden" for="event-end-time-1">
           To
         </label>
-        <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="">
+        <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="18.09.19 00:00">
       </div>
       <div class="event__field-group  event__field-group--price">
         <label class="event__label" for="event-price-1">
@@ -79,6 +102,6 @@ export const createAddFormElement = () => {
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
       <button class="event__reset-btn" type="reset">Cancel</button>
     </header>
-  </form>
-`;
-};
+    </form>`;
+  }
+}
